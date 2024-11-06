@@ -1,6 +1,7 @@
 package main
 
 import (
+	"broker-manager/auth"
 	"flag"
 	"log"
 	"os"
@@ -8,7 +9,6 @@ import (
 	"syscall"
 
 	mqtt "github.com/mochi-mqtt/server/v2"
-	"github.com/mochi-mqtt/server/v2/hooks/auth"
 	"github.com/mochi-mqtt/server/v2/listeners"
 )
 
@@ -30,8 +30,8 @@ func main() {
 	// Create the new MQTT Server.
 	server := mqtt.New(nil)
 
-	// Allow all connections.
-	_ = server.AddHook(new(auth.AllowHook), nil)
+	// Allow all connections. (for now)
+	_ = server.AddHook(new(auth.CustomAuth), nil)
 
 	// Create a TCP listener on a standard port.
 	tcp := listeners.NewTCP(listeners.Config{ID: "t1", Address: *tcpAddr})
