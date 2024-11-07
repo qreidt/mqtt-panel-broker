@@ -10,6 +10,8 @@ import (
 	"os/signal"
 )
 
+type ReverbConn websocket.Conn
+
 var WebsocketConn *websocket.Conn
 
 type EventType string
@@ -32,18 +34,17 @@ func Init() {
 	u := url.URL{Scheme: "ws", Host: *reverbHost, Path: "/app/" + *reverbAppKey}
 	log.Printf("connecting to %s", u.String())
 
-	c, _, err := websocket.DefaultDialer.Dial(u.String(), nil)
-	WebsocketConn = c
-
-	if err != nil {
+	var err error
+	if WebsocketConn, _, err = websocket.DefaultDialer.Dial(u.String(), nil); err != nil {
 		log.Fatal("dial:", err)
 	}
-
-	//goland:noinspection GoUnhandledErrorResult
-	defer c.Close()
 }
 
-func SendMessage(eventType EventType, data map[string]interface{}) {
+func Close() error {
+	return WebsocketConn.Close()
+}
+
+func SendMessage(eventType EventType, data any) {
 	message, _ := json.Marshal(map[string]interface{}{
 		"channel": "mqtt",
 		"event":   eventType,
@@ -52,6 +53,14 @@ func SendMessage(eventType EventType, data map[string]interface{}) {
 
 	if err := WebsocketConn.WriteMessage(websocket.TextMessage, message); err != nil {
 		log.Println("write:", err)
+		return
+	}
+}
+
+func sendPing() {
+	message := []byte("{\"event\": \"pusher:ping\", \"data\": {}}")
+	if err := WebsocketConn.WriteMessage(websocket.TextMessage, message); err != nil {
+		log.Println("ping:", err)
 		return
 	}
 }

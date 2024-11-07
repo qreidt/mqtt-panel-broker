@@ -2,6 +2,7 @@ package main
 
 import (
 	"broker-manager/auth"
+	"broker-manager/hooks"
 	"broker-manager/websockets"
 	"flag"
 	mqtt "github.com/mochi-mqtt/server/v2"
@@ -16,6 +17,8 @@ var server *mqtt.Server
 
 func main() {
 	websockets.Init()
+	//goland:noinspection GoUnhandledErrorResult
+	defer websockets.Close()
 
 	// Create signals channel to run server until interrupted
 	sigs := make(chan os.Signal, 1)
@@ -52,6 +55,7 @@ func main() {
 func setupHooks() {
 	// Allow all connections. ToDo setup authentication
 	_ = server.AddHook(new(auth.CustomAuth), nil)
+	_ = server.AddHook(new(hooks.OnConnect), nil)
 }
 
 func setupListeners() {
