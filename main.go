@@ -59,6 +59,7 @@ func setupHooks() {
 	// Setup intercept hooks
 	_ = server.AddHook(new(hooks.OnConnect), nil)
 	_ = server.AddHook(new(hooks.OnDisconnect), nil)
+	_ = server.AddHook(new(hooks.OnSubscribed), nil)
 }
 
 func setupListeners() {

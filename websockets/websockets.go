@@ -20,6 +20,7 @@ const (
 	MqttPacketReceived     EventType = "MqttPacketReceived"
 	MqttClientConnected              = "MqttClientConnected"
 	MqttClientDisconnected           = "MqttClientDisconnected"
+	MqttClientSubscribed             = "MqttClientSubscribed"
 )
 
 func Init() {
