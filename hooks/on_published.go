@@ -23,7 +23,7 @@ type OnPublished struct {
 
 // ID returns the ID of the hook.
 func (h *OnPublished) ID() string {
-	return "on-connect"
+	return "on-published"
 }
 
 // Provides indicates which hook methods this hook provides.

@@ -21,7 +21,7 @@ type OnSubscribed struct {
 
 // ID returns the ID of the hook.
 func (h *OnSubscribed) ID() string {
-	return "on-connect"
+	return "on-subscribed"
 }
 
 // Provides indicates which hook methods this hook provides.

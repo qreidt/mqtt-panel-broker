@@ -18,7 +18,7 @@ type OnDisconnect struct {
 
 // ID returns the ID of the hook.
 func (h *OnDisconnect) ID() string {
-	return "on-connect"
+	return "on-disconnect"
 }
 
 // Provides indicates which hook methods this hook provides.

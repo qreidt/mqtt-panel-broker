@@ -20,7 +20,7 @@ type OnUnsubscribed struct {
 
 // ID returns the ID of the hook.
 func (h *OnUnsubscribed) ID() string {
-	return "on-connect"
+	return "on-unsubscribed"
 }
 
 // Provides indicates which hook methods this hook provides.
