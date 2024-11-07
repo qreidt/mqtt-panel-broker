@@ -5,6 +5,7 @@ import (
 	"bytes"
 	mqtt "github.com/mochi-mqtt/server/v2"
 	"github.com/mochi-mqtt/server/v2/packets"
+	"time"
 )
 
 type ClientConnectedEvent struct {
@@ -15,11 +16,7 @@ type ClientConnectedEvent struct {
 
 	QoS       uint8  `json:"qos"`
 	KeepAlive uint16 `json:"keep_alive"`
-}
-
-// Options contains the configuration.
-type Options struct {
-	Reverb *websockets.ReverbConn
+	Timestamp uint64 `json:"timestamp"`
 }
 
 // OnConnect intercepts new connections
@@ -39,6 +36,7 @@ func (h *OnConnect) Provides(b byte) bool {
 	}, []byte{b})
 }
 
+// OnConnect Intercepts the new connection and generates an event to be sent on the websocket
 func (h *OnConnect) OnConnect(cl *mqtt.Client, pk packets.Packet) error {
 	event := ClientConnectedEvent{
 		ID:              cl.ID,
@@ -47,6 +45,7 @@ func (h *OnConnect) OnConnect(cl *mqtt.Client, pk packets.Packet) error {
 		Remote:          cl.Net.Remote,
 		QoS:             pk.Properties.MaximumQos,
 		KeepAlive:       pk.Connect.Keepalive,
+		Timestamp:       uint64(time.Now().UnixMilli()),
 	}
 
 	h.Log.Info("New connection", "event", event)

@@ -55,7 +55,10 @@ func main() {
 func setupHooks() {
 	// Allow all connections. ToDo setup authentication
 	_ = server.AddHook(new(auth.CustomAuth), nil)
+
+	// Setup intercept hooks
 	_ = server.AddHook(new(hooks.OnConnect), nil)
+	_ = server.AddHook(new(hooks.OnDisconnect), nil)
 }
 
 func setupListeners() {

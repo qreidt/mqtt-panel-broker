@@ -17,8 +17,9 @@ var WebsocketConn *websocket.Conn
 type EventType string
 
 const (
-	MqttPacketReceived  EventType = "MqttPacketReceived"
-	MqttClientConnected           = "MqttClientConnected"
+	MqttPacketReceived     EventType = "MqttPacketReceived"
+	MqttClientConnected              = "MqttClientConnected"
+	MqttClientDisconnected           = "MqttClientDisconnected"
 )
 
 func Init() {
