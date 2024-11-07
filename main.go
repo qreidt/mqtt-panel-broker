@@ -2,21 +2,20 @@ package main
 
 import (
 	"broker-manager/auth"
+	"broker-manager/websockets"
 	"flag"
+	mqtt "github.com/mochi-mqtt/server/v2"
+	"github.com/mochi-mqtt/server/v2/listeners"
 	"log"
 	"os"
 	"os/signal"
 	"syscall"
-
-	mqtt "github.com/mochi-mqtt/server/v2"
-	"github.com/mochi-mqtt/server/v2/listeners"
 )
 
+var server *mqtt.Server
+
 func main() {
-	tcpAddr := flag.String("tcp", ":1883", "network address for TCP listener")
-	wsAddr := flag.String("ws", ":1882", "network address for Websocket listener")
-	infoAddr := flag.String("info", ":8080", "network address for web info dashboard listener")
-	flag.Parse()
+	websockets.Init()
 
 	// Create signals channel to run server until interrupted
 	sigs := make(chan os.Signal, 1)
@@ -28,10 +27,38 @@ func main() {
 	}()
 
 	// Create the new MQTT Server.
-	server := mqtt.New(nil)
+	server = mqtt.New(nil)
 
-	// Allow all connections. (for now)
+	setupHooks()
+	setupListeners()
+
+	// Start Server
+	go func() {
+		err := server.Serve()
+		if err != nil {
+			log.Fatal(err)
+		}
+	}()
+
+	// Run server until interrupted
+	<-done
+
+	// Cleanup
+	server.Log.Warn("caught signal, stopping...")
+	_ = server.Close()
+	server.Log.Info("mochi mqtt shutdown complete")
+}
+
+func setupHooks() {
+	// Allow all connections. ToDo setup authentication
 	_ = server.AddHook(new(auth.CustomAuth), nil)
+}
+
+func setupListeners() {
+	tcpAddr := flag.String("tcp", ":1883", "network address for TCP listener")
+	wsAddr := flag.String("ws", ":1882", "network address for Websocket listener")
+	infoAddr := flag.String("info", ":8080", "network address for web info dashboard listener")
+	flag.Parse()
 
 	// Create a TCP listener on a standard port.
 	tcp := listeners.NewTCP(listeners.Config{ID: "t1", Address: *tcpAddr})
@@ -65,20 +92,4 @@ func main() {
 	if err := server.AddListener(stats); err != nil {
 		log.Fatal(err)
 	}
-
-	// Start Server
-	go func() {
-		err := server.Serve()
-		if err != nil {
-			log.Fatal(err)
-		}
-	}()
-
-	// Run server until interrupted
-	<-done
-
-	// Cleanup
-	server.Log.Warn("caught signal, stopping...")
-	_ = server.Close()
-	server.Log.Info("mochi mqtt shutdown complete")
 }
