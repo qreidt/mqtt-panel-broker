@@ -21,6 +21,7 @@ const (
 	MqttClientConnected              = "MqttClientConnected"
 	MqttClientDisconnected           = "MqttClientDisconnected"
 	MqttClientSubscribed             = "MqttClientSubscribed"
+	MqttClientUnsubscribed           = "MqttClientUnsubscribed"
 )
 
 func Init() {

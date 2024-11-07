@@ -60,6 +60,7 @@ func setupHooks() {
 	_ = server.AddHook(new(hooks.OnConnect), nil)
 	_ = server.AddHook(new(hooks.OnDisconnect), nil)
 	_ = server.AddHook(new(hooks.OnSubscribed), nil)
+	_ = server.AddHook(new(hooks.OnUnsubscribed), nil)
 }
 
 func setupListeners() {
