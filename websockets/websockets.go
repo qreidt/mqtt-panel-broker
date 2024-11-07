@@ -17,7 +17,7 @@ var WebsocketConn *websocket.Conn
 type EventType string
 
 const (
-	MqttPacketReceived     EventType = "MqttPacketReceived"
+	MqttPacketProcessed    EventType = "MqttPacketProcessed"
 	MqttClientConnected              = "MqttClientConnected"
 	MqttClientDisconnected           = "MqttClientDisconnected"
 	MqttClientSubscribed             = "MqttClientSubscribed"
