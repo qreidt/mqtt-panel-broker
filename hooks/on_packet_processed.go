@@ -49,7 +49,21 @@ func (h *OnPacketProcessed) ID() string {
 func (h *OnPacketProcessed) Provides(b byte) bool {
 	return bytes.Contains([]byte{
 		mqtt.OnPacketProcessed,
+		mqtt.OnPacketSent,
 	}, []byte{b})
+}
+
+func (h *OnPacketProcessed) OnPacketSent(cl *mqtt.Client, pk packets.Packet, b []byte) {
+	event := ClientPacketProcessedEvent{
+		ID:           cl.ID,
+		PacketId:     pk.PacketID,
+		PacketType:   PacketType(pk.FixedHeader.Type),
+		PacketLength: uint(pk.FixedHeader.Remaining),
+		Timestamp:    uint64(time.Now().UnixMilli()),
+	}
+
+	h.Log.Info("Packet Processed", "event", event)
+	websockets.SendMessage(websockets.MqttPacketProcessed, event)
 }
 
 // OnPacketProcessed Intercepts the disconnected client and generates an event to be sent on the websocket
