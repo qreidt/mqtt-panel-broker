@@ -5,6 +5,7 @@
 package auth
 
 import (
+	"broker-manager/services"
 	"bytes"
 
 	"github.com/mochi-mqtt/server/v2"
@@ -35,7 +36,8 @@ func (h *CustomAuth) OnConnectAuthenticate(cl *mqtt.Client, pk packets.Packet) b
 		"username", string(pk.Connect.Username),
 		"remote", cl.Net.Remote)
 
-	return true
+	return services.AuthServiceInstance.Authenticate(
+		cl.ID, string(pk.Connect.Username), string(pk.Connect.Password))
 }
 
 // OnACLCheck returns true/allowed for all checks.
@@ -45,5 +47,5 @@ func (h *CustomAuth) OnACLCheck(cl *mqtt.Client, topic string, write bool) bool 
 		"username", string(cl.Properties.Username),
 		"topic", topic)
 
-	return true
+	return services.AuthServiceInstance.Authenticate(cl.ID, string(cl.Properties.Username), "")
 }

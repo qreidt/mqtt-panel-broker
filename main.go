@@ -3,6 +3,7 @@ package main
 import (
 	"broker-manager/auth"
 	"broker-manager/hooks"
+	"broker-manager/services"
 	"broker-manager/websockets"
 	"flag"
 	mqtt "github.com/mochi-mqtt/server/v2"
@@ -17,6 +18,8 @@ var server *mqtt.Server
 
 func main() {
 	websockets.Init()
+	services.AuthServiceInit()
+
 	//goland:noinspection GoUnhandledErrorResult
 	defer websockets.Close()
 
