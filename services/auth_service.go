@@ -12,9 +12,9 @@ import (
 
 // Define flags for remote path, token TTL, and ticker interval.
 var (
-	remotePath      = flag.String("auth-url", "http://mqtt-panel.test/api/mqtt/auth", "URL of the remote authentication service")
-	tokenTTLSeconds = flag.Int64("api-token-ttl", 600, "Time-to-live (TTL) in seconds for each authentication token")
-	tickerInterval  = flag.Duration("auto-clean-interval", 300*time.Second, "Interval for the auto-cleaner ticker")
+	remotePath     = flag.String("auth-url", "http://mqtt-panel.test/api/mqtt/auth", "URL of the remote authentication service")
+	tokenTTL       = flag.Duration("api-token-ttl", 24*time.Hour, "Time-to-live (TTL) in seconds for each authentication token")
+	tickerInterval = flag.Duration("auto-clean-interval", 168*time.Hour, "Interval for the auto-cleaner ticker")
 )
 
 // AuthenticatedToken represents a user's authenticated session with an expiration time (TTL).
@@ -22,7 +22,7 @@ type AuthenticatedToken struct {
 	TeamID       uint64 // Team ID associated with the token
 	MqttClientID uint64 // MQTT Client ID associated with the token
 	ApiTokenID   uint64 // API Token ID associated with the token
-	TTL          int64  // Time-to-Live (expiration) for the token, in UNIX timestamp format
+	TTL          uint64 // Time-to-Live (expiration) for the token, in UNIX timestamp format
 }
 
 // AuthService manages active authenticated tokens and periodically cleans up expired ones.
@@ -56,7 +56,7 @@ func setupAutoCleaner(ctx context.Context) {
 			select {
 			case <-ticker.C:
 				// On each tick, get the current time in UNIX format.
-				now := time.Now().Unix()
+				now := uint64(time.Now().Unix())
 
 				// Iterate over each token and delete if it has expired.
 				for key, token := range AuthServiceInstance.AuthenticatedList {
@@ -75,11 +75,17 @@ func setupAutoCleaner(ctx context.Context) {
 // Authenticate verifies credentials, either by cache lookup or remote authentication.
 func (s *AuthService) Authenticate(clientId, username, password string) bool {
 	// Generate a unique key for this client using their credentials.
-	authKey := clientId + "|" + username + "|" + password
+	authKey := clientId + "::" + username
 
 	// Check if the token is already in the cache and hasn't expired.
-	if cache := s.AuthenticatedList[authKey]; cache != nil && cache.TTL > time.Now().Unix() {
-		return true // Token is valid in cache, return success.
+	if cache := s.AuthenticatedList[authKey]; cache != nil && cache.TTL > uint64(time.Now().Unix()) {
+		cache.TTL = newTTL()
+		return true // Token is valid in cache, return success and update.
+	}
+
+	// ACL authentications use only clientId + username. No cache = unauthenticated
+	if password == "" {
+		return false
 	}
 
 	// Perform remote authentication if token is not in cache or has expired.
@@ -117,7 +123,7 @@ func handleRemoteAuthentication(clientId, username, password string) (*Authentic
 		TeamID:       responseContent["team_id"],
 		MqttClientID: responseContent["mqtt_client_id"],
 		ApiTokenID:   responseContent["api_token_id"],
-		TTL:          time.Now().Unix() + *tokenTTLSeconds, // Use TTL from flag
+		TTL:          newTTL(),
 	}, nil
 }
 
@@ -149,4 +155,10 @@ func sendRequest(clientId, username, password string) (*http.Response, error) {
 	}
 
 	return response, nil // Return the HTTP response for further processing.
+}
+
+// newTTL creates a new timestamp expiry
+func newTTL() uint64 {
+	// Now + TTL from Flag
+	return uint64(time.Now().Unix()) + uint64(tokenTTL.Seconds())
 }

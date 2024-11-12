@@ -47,5 +47,5 @@ func (h *CustomAuth) OnACLCheck(cl *mqtt.Client, topic string, write bool) bool 
 		"username", string(cl.Properties.Username),
 		"topic", topic)
 
-	return true
+	return services.AuthServiceInstance.Authenticate(cl.ID, string(cl.Properties.Username), "")
 }
